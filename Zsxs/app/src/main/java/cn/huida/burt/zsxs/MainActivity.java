@@ -18,9 +18,10 @@ import cn.huida.burt.zsxs.pager.HomePager;
 import cn.huida.burt.zsxs.pager.MyClassPager;
 import cn.huida.burt.zsxs.pager.MyPager;
 import cn.huida.burt.zsxs.view.NoScrollViewPager;
+import cn.huida.burt.zsxs.view.gangedrecyclerview.CheckListener;
 
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity   {
     public ArrayList<BasePager> pagerList;
     private NoScrollViewPager vp_main_tab;
     private RadioButton rb_home;
@@ -29,6 +30,7 @@ public class MainActivity extends FragmentActivity {
     private RadioButton rb_myclass;
     private RadioButton rb_class;
     private RadioGroup rb_main;
+    public static boolean left;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -96,7 +98,9 @@ public class MainActivity extends FragmentActivity {
         vp_main_tab.setCurrentItem(0);
         vp_main_tab.setOffscreenPageLimit(3);
     }
-    }
+
+
+}
 
     class MyAdapter extends FragmentPagerAdapter {
         private final ArrayList<BasePager> pagerList;

@@ -42,7 +42,7 @@
 
         </RelativeLayout>
 
-
+    <!--三个顶部按钮-->
        <RadioGroup
            android:id="@+id/rg_class"
            android:padding="5dp"
@@ -81,20 +81,21 @@
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
-        <ListView
-            android:id="@+id/lv_class"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent">
-        </ListView>
-
-        <GridView
-            android:id="@+id/gv_class"
+        <android.support.v7.widget.RecyclerView
+            android:background="@color/white_back"
+            android:id="@+id/rv_sort"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="4"
-            android:numColumns="3"
-            android:verticalSpacing="15dp"></GridView>
+            android:layout_weight="1"/>
+
+        <FrameLayout
+            android:background="@color/white_back"
+            android:layout_marginLeft="@dimen/dp_10"
+            android:id="@+id/lin_fragment"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+        </FrameLayout>
     </LinearLayout>
 
 

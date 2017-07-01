@@ -4,11 +4,16 @@
 package cn.huida.burt.zsxs.pager;
 
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,18 +31,24 @@ import com.google.gson.Gson;
 import org.xutils.common.Callback;
 import org.xutils.http.RequestParams;
 import org.xutils.x;
+
+import java.util.Arrays;
 import java.util.List;
+
+import cn.huida.burt.zsxs.MainActivity;
 import cn.huida.burt.zsxs.R;
 import cn.huida.burt.zsxs.pojo.ZsxsBean;
-
-
+import cn.huida.burt.zsxs.view.gangedrecyclerview.CheckListener;
+import cn.huida.burt.zsxs.view.gangedrecyclerview.RvListener;
+import cn.huida.burt.zsxs.view.gangedrecyclerview.SortAdapter;
+import cn.huida.burt.zsxs.view.gangedrecyclerview.SortDetailFragment;
 
 
 /**
  * Created by Administrator on 2017/3/28.
  */
 
-public class ClassPager extends BasePager implements View.OnClickListener{
+public class ClassPager extends BasePager implements View.OnClickListener ,CheckListener{
 
     private ImageButton right_top_more;
     private GridView gv_class;
@@ -59,121 +70,108 @@ public class ClassPager extends BasePager implements View.OnClickListener{
     private List<ZsxsBean.XLeftCourseBean.TleftListBean> leftCourse_list;
     private RadioGroup rg_class;
 
+
+    private RecyclerView rvSort;
+    private SortAdapter mSortAdapter;
+    private SortDetailFragment mSortDetailFragment;
+    private MainActivity mContext;
+    public static boolean left;
+    public static int finalNumber = 0;
+
+
+    private String rootUrl = "http://api.chinaplat.com/getval_2017?Action=GetCourseTypesList";
+    private View view;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view=initView(inflater,container);
+        view = initView(inflater,container);
         initData();
         return view;
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        initViews();
+        initDataAd();
+    }
+
+    private void initViews() {
+        rvSort = (RecyclerView) view.findViewById(R.id.rv_sort);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mContext);
+        rvSort.setLayoutManager(linearLayoutManager);
+        DividerItemDecoration decoration = new DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL);
+        rvSort.addItemDecoration(decoration);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mContext=(MainActivity)getActivity();
+    }
+
+    @Override
     public View initView(final LayoutInflater inflater, ViewGroup container) {
         View view = inflater.inflate(R.layout.class_layout,container,false);
-
-        lv_class = (ListView) view.findViewById(R.id.lv_class);
-        gv_class = (GridView) view.findViewById(R.id.gv_class);
         tv_class = (TextView) view.findViewById(R.id.tv_class);
         rb_class_exam = (RadioButton) view.findViewById(R.id.rb_class_exam);
         rb_class_work = (RadioButton) view.findViewById(R.id.rb_class_work);
         rb_class_life = (RadioButton) view.findViewById(R.id.rb_class_life);
         right_top_more = (ImageButton) view.findViewById(R.id.right_top_more);
         rg_class = (RadioGroup) view.findViewById(R.id.rg_class);
-
         right_top_more.setOnClickListener(this);
-
         return view;
     }
 
 
+    private void initDataAd() {
+        String[] classify = getResources().getStringArray(R.array.pill);
+        List<String> list = Arrays.asList(classify);
+        mSortAdapter = new SortAdapter(mContext, list, new RvListener() {
+            @Override
+            public void onItemClick(int id, int position) {
+                if (mSortDetailFragment != null) {
+                    setChecked(position, true);
+                }
+            }
+        });
+        rvSort.setAdapter(mSortAdapter);
+        createFragment();
+    }
+
+    public void createFragment() {
+        FragmentTransaction fragmentTransaction = mContext.getSupportFragmentManager().beginTransaction();
+        mSortDetailFragment = new SortDetailFragment();
+        mSortDetailFragment.setListener(this);
+        fragmentTransaction.add(R.id.lin_fragment, mSortDetailFragment);
+        fragmentTransaction.commit();
+    }
+
+    private void setChecked(int position, boolean isLeft) {
+        finalNumber = position;
+        left = isLeft;
+        Log.d("boolean---->", String.valueOf(left));
+        mSortAdapter.setCheckedPosition(position);
+        if (isLeft) {
+            mSortDetailFragment.setData(position * 10 + position);
+        }
+
+    }
+
+
+
+
+
+
     public void initData() {
-        getDataForNet(null);
+        //getDataForNet(null);
         rb_class_exam.setChecked(true);
         rg_class.setOnCheckedChangeListener(new MyOnCheckedChangeListener());
     }
 
-    String rootUrl = "http://api.chinaplat.com/getval_2017?Action=GetCourseTypesList";
 
-    //下载数据
-    private void getDataForNet(String tid) {
-        RequestParams params = new RequestParams(rootUrl);
-        params.addBodyParameter("kc_types",kc_types);
-        params.addBodyParameter("tid",tid);
-        x.http().get(params, new Callback.CommonCallback<String>() {
-            @Override
-            public void onSuccess(String result) {
-                //解析result
-                if (result!=null){
-                    preseData(result);
-                }
-            }
-            //请求异常后的回调方法
-            @Override
-            public void onError(Throwable ex, boolean isOnCallback) {
-            }
-            //主动调用取消请求的回调方法
-            @Override
-            public void onCancelled(CancelledException cex) {
-            }
-            @Override
-            public void onFinished() {
-            }
-        });
-    }
-        //第一次获取数据
-    private void preseData(String result) {
-        Gson gson = new Gson();
-        getCourseBean = gson.fromJson(result, ZsxsBean.XGetCourseTypesList.class);
-        getCourse_list = getCourseBean.t_list;
 
-        if (kc_types=="0"||kc_types=="1"){
-            getListViewData( getCourse_list.get(0).id);
-        }else {
-            getListViewData( getCourse_list.get(2).id);
-        }
-        }
-        //下载左侧数据
-    private void getListViewData(String tid) {
-        Log.e("================","sdffffffffffffff");
-        RequestParams params = new RequestParams(rootUrl);
-        params.addBodyParameter("kc_types",kc_types);
-        params.addBodyParameter("tid",tid);
-        x.http().get(params, new Callback.CommonCallback<String>() {
-            @Override
-            public void onSuccess(String result) {
-                //解析result
-                if (result!=null){
-                    preseDataList(result);
-                }
-            }
-            //请求异常后的回调方法
-            @Override
-            public void onError(Throwable ex, boolean isOnCallback) {
-            }
-            //主动调用取消请求的回调方法
-            @Override
-            public void onCancelled(CancelledException cex) {
-            }
-            @Override
-            public void onFinished() {
-            }
-        });
-    }
-
-    private void preseDataList(String result) {
-        Gson gson = new Gson();
-        xLeftCourseBean = gson.fromJson(result, ZsxsBean.XLeftCourseBean.class);
-        leftCourse_list = xLeftCourseBean.t_list;
-        final myLeftAdapter myLeftAdapter = new myLeftAdapter();
-        lv_class.setAdapter(myLeftAdapter);
-        lv_class.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                currentPosi = position;
-                myLeftAdapter.notifyDataSetChanged();
-            }
-        });
-    }
 
 
     @Override
@@ -185,9 +183,9 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                     rb_class_life.setChecked(false);
                     Log.e("fgfg","考试");
                     if (kc_types=="2"||kc_types=="3") {
-                        getListViewData(getCourse_list.get(2).id);
+                        //getListViewData(getCourse_list.get(2).id);
                     }else {
-                        getListViewData(getCourse_list.get(0).id);
+                       // getListViewData(getCourse_list.get(0).id);
                     }
                     break;
                 case R.id.rb_class_work:
@@ -195,7 +193,7 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                     rb_class_work.setChecked(true);
                     rb_class_life.setChecked(false);
                     Log.e("fgfg","工作");
-                    getListViewData(getCourse_list.get(1).id);
+                    //getListViewData(getCourse_list.get(1).id);
                     break;
                 case R.id.rb_class_life:
                     rb_class_exam.setChecked(false);
@@ -203,9 +201,9 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                     rb_class_life.setChecked(true);
                     Log.e("fgfg","生活");
                     if (kc_types=="2"||kc_types=="3") {
-                        getListViewData(getCourse_list.get(0).id);
+                        //getListViewData(getCourse_list.get(0).id);
                     }else {
-                        getListViewData(getCourse_list.get(2).id);
+                       // getListViewData(getCourse_list.get(2).id);
                     }
                     break;
                 case R.id.right_top_more:
@@ -214,7 +212,7 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                 case R.id.pop_tv_video:
                     kc_types = "0";
                     mPopupWindow.dismiss();
-                    getDataForNet(null);
+                    //getDataForNet(null);
                     tv_class.setText("视频中心");
                     rb_class_exam.setChecked(true);
                     rb_class_life.setChecked(false);
@@ -223,7 +221,7 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                 case R.id.pop_tv_audio:
                     kc_types="1";
                     mPopupWindow.dismiss();
-                    getDataForNet(null);
+                   //getDataForNet(null);
                     tv_class.setText("音频中心");
                     rb_class_exam.setChecked(true);
                     rb_class_life.setChecked(false);
@@ -232,7 +230,7 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                 case R.id.pop_tv_read:
                     kc_types="2";
                     mPopupWindow.dismiss();
-                    getDataForNet(null);
+                    //getDataForNet(null);
                     tv_class.setText("阅读中心");
                     rb_class_exam.setChecked(true);
                     rb_class_life.setChecked(false);
@@ -241,7 +239,7 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                 case R.id.pop_tv_article:
                     kc_types="3";
                     mPopupWindow.dismiss();
-                    getDataForNet(null);
+                   // getDataForNet(null);
                     tv_class.setText("文章中心");
                     rb_class_exam.setChecked(true);
                     rb_class_life.setChecked(false);
@@ -277,6 +275,11 @@ public class ClassPager extends BasePager implements View.OnClickListener{
         mPopupWindow.setFocusable(true);
 
         mPopupWindow.showAsDropDown(right_top_more);
+    }
+
+    @Override
+    public void check(int position, boolean isChecked) {
+        setChecked(position, isChecked);
     }
 
     class myLeftAdapter extends BaseAdapter{
@@ -320,9 +323,9 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                     rb_class_life.setChecked(false);
                     Log.e("fgfg","考试");
                     if (kc_types=="2"||kc_types=="3") {
-                        getListViewData(getCourse_list.get(2).id);
+                      //  getListViewData(getCourse_list.get(2).id);
                     }else {
-                        getListViewData(getCourse_list.get(0).id);
+                       // getListViewData(getCourse_list.get(0).id);
                     }
                     break;
                 case R.id.rb_class_work:
@@ -330,7 +333,7 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                     rb_class_work.setChecked(true);
                     rb_class_life.setChecked(false);
                     Log.e("fgfg","工作");
-                    getListViewData(getCourse_list.get(1).id);
+                   // getListViewData(getCourse_list.get(1).id);
                     break;
                 case R.id.rb_class_life:
                     rb_class_exam.setChecked(false);
@@ -338,9 +341,9 @@ public class ClassPager extends BasePager implements View.OnClickListener{
                     rb_class_life.setChecked(true);
                     Log.e("fgfg","生活");
                     if (kc_types=="2"||kc_types=="3") {
-                        getListViewData(getCourse_list.get(0).id);
+                       // getListViewData(getCourse_list.get(0).id);
                     }else {
-                        getListViewData(getCourse_list.get(2).id);
+                       // getListViewData(getCourse_list.get(2).id);
                     }
                     break;
             }

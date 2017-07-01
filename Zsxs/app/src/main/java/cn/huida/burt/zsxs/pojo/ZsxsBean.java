@@ -1,11 +1,9 @@
 package cn.huida.burt.zsxs.pojo;
 
 import java.util.List;
-
 /**
  * Created by Q on 2017/6/24.
  */
-
 public class ZsxsBean {
 
     public Qlogin qlogin;
