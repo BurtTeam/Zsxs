@@ -1,5 +1,3 @@
-
-
 package cn.huida.burt.zsxs.pojo;
 
 import java.util.List;
@@ -22,7 +20,64 @@ public class ZsxsBean {
     public QZhuanTiListInfo qZhuanTiListInfo;
     public QZhuanTiClassInfo qZhuanTiClassInfo;
     public QRecommendClassInfo qRecommendClassInfo;
+    public XGetCourseTypesList xGetCourseTypesList;
+    /**
+     * kc_types : 0
+     * t_list : [{"id":"6","name":"经管财"},{"id":"7","name":"医药卫"},{"id":"8","name":"建筑类"},{"id":"9","name":"语言类"},{"id":"18","name":"公职类"},{"id":"19","name":"学历类"},{"id":"20","name":"计算机"}]
+     */
 
+    private String kc_types;
+    private List<QCategoryList.TListBean> t_list;
+
+    public String getKc_types() {
+        return kc_types;
+    }
+
+    public void setKc_types(String kc_types) {
+        this.kc_types = kc_types;
+    }
+
+    public List<QCategoryList.TListBean> getT_list() {
+        return t_list;
+    }
+
+    public void setT_list(List<QCategoryList.TListBean> t_list) {
+        this.t_list = t_list;
+    }
+
+
+    public static class XGetCourseTypesList{
+        /**
+         * kc_types : 0
+         * t_list : [{"id":"4","name":"考试"},{"id":"5","name":"工作"},{"id":"10","name":"生活"}]
+         */
+        public String kc_types;
+        public List<XTopListBean> t_list;
+        public static class XTopListBean {
+            /**
+             * id : 4
+             * name : 考试
+             */
+            public String id;
+            public String name;
+        }
+    }
+    public static class XLeftCourseBean{
+        /**
+         * kc_types : 0
+         * t_list : [{"id":"6","name":"经管财"},{"id":"7","name":"医药卫"},{"id":"8","name":"建筑类"},{"id":"9","name":"语言类"},{"id":"18","name":"公职类"},{"id":"19","name":"学历类"},{"id":"20","name":"计算机"}]
+         */
+        public String kc_types;
+        public List<TleftListBean> t_list;
+        public static class TleftListBean {
+            /**
+             * id : 6
+             * name : 经管财
+             */
+            public String id;
+            public String name;
+        }
+    }
     public static class  Qlogin{
 
 
@@ -222,4 +277,8 @@ public class ZsxsBean {
             public int hot;
         }
     }
+
+
+
+
 }
